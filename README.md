@@ -1,6 +1,6 @@
 ### Liquidity trackor
 
-*It is a bot written in rust allowing to stream the new LPs created as well as the liquidity additions on them. A Discord webhook can be use to have alert on your own server*
+*It is a bot written in rust allowing to stream the new LPs created as well as the liquidity additions on them. A Discord webhook can be use to have alerts on your own server*
 
 #### Setup
 ##### Requirements
@@ -18,3 +18,7 @@ Copy the `.env.example` file and rename it to `.env`. Fill the variables with yo
 #### TODO
 - [ ] UniV3 support
 - [ ] Get the dex name from the json file
+
+
+#### Credits
+This bot is based on top of the Rust MEV template by [Degatchi](https://github.com/degatchi/mev-template-rs)
