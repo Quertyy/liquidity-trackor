@@ -82,6 +82,13 @@ struct Args {
    /// JSON file with addresses to monitor
    #[arg(short, long, default_value = "src/json/dex_contracts.json")]
    json: String,
+   /// Discord webhook alert
+   #[arg(short, long, default_value = "false")]
+   alert: bool,
+   /// Token contract verification
+   /// This will check if the token contract is verified on the explorer
+    #[arg(short, long, default_value = "false")]
+    verify: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -109,12 +116,19 @@ impl Config {
         }
     }
 
-    pub async fn create_dex(&self, factory: Address, router: Address, chain: String) -> Dex {
-        Dex::new(self.http.clone(), factory, router, chain)
+    pub async fn create_dex(&self, factory: Address, router: Address, chain: String, alert: bool, verify: bool) -> Dex {
+        Dex::new(
+            self.http.clone(), 
+            factory, 
+            router, 
+            chain, 
+            alert, 
+            verify
+        )
     }
 }
 
-fn conf_arg() -> (String, bool, String) {
+fn conf_arg() -> (String, bool, String, bool, bool) {
     let args = Args::parse();
     let key;
     match args.chain {
@@ -140,19 +154,19 @@ fn conf_arg() -> (String, bool, String) {
             key = "CRONOS"
         }
     }
-    (key.to_string(), args.block, args.json)
+    (key.to_string(), args.block, args.json, args.alert, args.verify)
 }
 
-async fn config_task(dex_router: H160, dex_factory: H160, chain: String) {
+async fn config_task(dex_router: H160, dex_factory: H160, chain: String, alert: bool, verify: bool) {
     let config = Config::new(chain.as_str()).await;
     tokio::spawn(async move {
-        let dex = config.create_dex(dex_factory, dex_router, chain.clone()).await;
+        let dex = config.create_dex(dex_factory, dex_router, chain.clone(), alert, verify).await;
         dex.stream_pairs_created(config.wss, config.http).await.unwrap();
     });
 }
 
 pub async fn run() {    
-    let (chain, block_monitoring, path) = conf_arg();
+    let (chain, block_monitoring, path, alert, verify) = conf_arg();
     let chain_block = chain.clone();
 
     let data = get_contracts_data(path);
@@ -170,7 +184,9 @@ pub async fn run() {
             config_task(
                 address(addresses.router.as_str()), 
                 address(addresses.factory.as_str()), 
-                chain.clone()
+                chain.clone(),
+                alert,
+                verify
             ).await;
         }
     } else {

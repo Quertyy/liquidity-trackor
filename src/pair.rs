@@ -50,10 +50,10 @@ impl Pair {
 
         let new_token: Token;
         if token0.symbol == "WETH" {
-            token1.verified_contract(dex.chain.clone()).await.unwrap();
             new_token = token1.clone();
+            if dex.verify { token1.verified_contract(dex.chain.clone()).await.unwrap() ;}
         } else {
-            token0.verified_contract(dex.chain.clone()).await.unwrap();
+            if dex.verify { token0.verified_contract(dex.chain.clone()).await.unwrap() ;}
             new_token = token0.clone();
         }
 
@@ -169,11 +169,13 @@ impl Pair {
         let self_mut = Arc::get_mut(self).unwrap();
         self_mut.get_reserves(http.clone()).await.unwrap();
 
-        self_mut
+        if self_mut.dex.verify {
+            self_mut
             .new_token
             .verified_contract(self_mut.dex.chain.clone())
             .await
             .unwrap();
+        }
 
         let pair = self.clone();
         timestamp_print!(
@@ -185,7 +187,7 @@ impl Pair {
                 self.address
             )
         );
-        alert(pair, amount_0, amount_1).await.unwrap();
+        if self.dex.alert { alert(pair, amount_0, amount_1).await.unwrap() }
         Ok(())
     }
 }

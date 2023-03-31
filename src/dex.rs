@@ -33,6 +33,8 @@ pub struct Dex {
     pub router_address: Address,
     factory: UniV2Factory<Provider<Http>>,
     router: UniV2Router<Provider<Http>>,
+    pub alert: bool,
+    pub verify: bool,
 }
 
 impl Dex {
@@ -41,6 +43,8 @@ impl Dex {
         factory_address: Address,
         router_address: Address,
         chain: String,
+        alert: bool,
+        verify: bool,
     ) -> Self {
         let factory = UniV2Factory::new(factory_address, Arc::clone(&middleware));
         let router = UniV2Router::new(router_address, Arc::clone(&middleware));
@@ -54,6 +58,8 @@ impl Dex {
             router_address,
             factory,
             router,
+            alert,
+            verify,
         }
     }
 

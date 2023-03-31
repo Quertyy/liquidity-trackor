@@ -20,9 +20,11 @@ Copy the `.env.example` file and rename it to `.env`. Fill the variables with yo
 A json file is already present containing the contract addresses of several dex on different EVM blockchains. You can add your own by following the same format, you just need to add the dex name and its factory and router contract address.
 
 ##### Options
-- `--chain` : The chain you want to track. Default is `ethereum`
+- `--chain` : The chain you want to track. Default is `ethereum`.
 - `--json` : The path to the json file containing the contracts addresses. Default is `src/json/dex_contracts.json`
 - `--block` : Monitor the block creation. Default is `false`
+- `--alert`: Send a Discord alert when liquidity is added to a new LP. Default is `false`
+- `--verify`: Verifies if the token's contract is verified on the chain explorer. Default is `false`
 
 #### Run
 ```bash
