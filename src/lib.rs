@@ -12,10 +12,9 @@ use contracts::get_contracts_data;
 use helpers::address;
 
 use crate::dex::Dex;
-use crate::helpers::setup_signer;
 
 use std::sync::Arc;
-use ethers::prelude::{k256::ecdsa::SigningKey, *};
+use ethers::prelude::*;
 use tokio::signal::ctrl_c;
 use clap::Parser;
 use colored::*;
@@ -88,7 +87,7 @@ struct Args {
 #[derive(Debug, Clone)]
 pub struct Config {
     #[allow(dead_code)]
-    pub http: Arc<SignerMiddleware<Provider<Http>, Wallet<SigningKey>>>,
+    pub http: Arc<Provider<Http>>,
     #[allow(dead_code)]
     pub wss: Arc<Provider<Ws>>,
 }
@@ -99,7 +98,7 @@ impl Config {
         
         let network = std::env::var(format!("NETWORK_RPC_{}", chain)).expect("missing NETWORK_RPC");
         let provider: Provider<Http> = Provider::<Http>::try_from(network).unwrap();
-        let middleware = Arc::new(setup_signer(provider.clone()).await);
+        let middleware = Arc::new(provider);
 
         let ws_network = std::env::var(format!("NETWORK_WSS_{}", chain)).expect("missing NETWORK_WSS");
         let ws_provider: Provider<Ws> = Provider::<Ws>::connect(ws_network).await.unwrap();

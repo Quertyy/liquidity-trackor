@@ -2,14 +2,11 @@ use std::sync::Arc;
 
 use ethers::prelude::*;
 
-use ethers::prelude::k256::ecdsa::SigningKey;
-
-use crate::helpers::{wei_to_float, token_amount};
-use crate::timestamp_print;
-use crate::dex::Dex;
-use crate::token::Token;
 use crate::alert::alert;
-
+use crate::dex::Dex;
+use crate::helpers::{token_amount, wei_to_float};
+use crate::timestamp_print;
+use crate::token::Token;
 
 use colored::*;
 use eyre::Result;
@@ -30,12 +27,26 @@ impl Pair {
         token0_address: Address,
         token1_address: Address,
         dex: &Arc<Dex>,
-        provider: Arc<SignerMiddleware<Provider<Http>, Wallet<SigningKey>>>
+        provider: Arc<Provider<Http>>,
     ) -> Pair {
-        let mut token0: Token = Token::new(token0_address, provider.clone()).await.unwrap(); 
+        let mut token0: Token = Token::new(token0_address, provider.clone()).await.unwrap();
         let mut token1: Token = Token::new(token1_address, provider.clone()).await.unwrap();
-        timestamp_print!(Color::Green, Some(false), format!("TokenIn: {} | {} | {:#066x}", token0.name, token0.symbol, token0.address));
-        timestamp_print!(Color::Green, Some(false), format!("TokenOut: {} | {} | {:#066x}", token1.name, token1.symbol, token1.address));
+        timestamp_print!(
+            Color::Green,
+            Some(false),
+            format!(
+                "TokenIn: {} | {} | {:#066x}",
+                token0.name, token0.symbol, token0.address
+            )
+        );
+        timestamp_print!(
+            Color::Green,
+            Some(false),
+            format!(
+                "TokenOut: {} | {} | {:#066x}",
+                token1.name, token1.symbol, token1.address
+            )
+        );
 
         let new_token: Token;
         if token0.symbol == "WETH" {
@@ -45,7 +56,7 @@ impl Pair {
             token0.verified_contract(dex.chain.clone()).await.unwrap();
             new_token = token0.clone();
         }
-        
+
         Pair {
             dex: Arc::clone(dex),
             address,
@@ -56,7 +67,7 @@ impl Pair {
         }
     }
 
-    pub async fn get_reserves(&mut self, provider: Arc<SignerMiddleware<Provider<Http>, Wallet<SigningKey>>>) -> Result<()> {
+    pub async fn get_reserves(&mut self, provider: Arc<Provider<Http>>) -> Result<()> {
         abigen!(
             IUniswapV2Pair,
             r#"[
@@ -68,10 +79,10 @@ impl Pair {
         self.reserves = (reserve0.into(), reserve1.into());
         timestamp_print!(
             Color::Green,
-            Some(false), 
+            Some(false),
             format!(
-                "[PAIR][LIQ] Current reserves: {} {} | {} {}", 
-                wei_to_float(self.reserves.0.as_u128()), 
+                "[PAIR][LIQ] Current reserves: {} {} | {} {}",
+                wei_to_float(self.reserves.0.as_u128()),
                 self.token0.symbol,
                 wei_to_float(self.reserves.1.as_u128()),
                 self.token1.symbol
@@ -82,10 +93,10 @@ impl Pair {
 
     /// Streams the "Mint" event from the pair address -> addLiquidity
     pub async fn stream_add_liquidity(
-        self: &mut Arc<Self>, 
-        ws: Arc<Provider<Ws>>, 
-        http: Arc<SignerMiddleware<Provider<Http>, Wallet<SigningKey>>>, 
-        block_number: U64
+        self: &mut Arc<Self>,
+        ws: Arc<Provider<Ws>>,
+        http: Arc<Provider<Http>>,
+        block_number: U64,
     ) -> Result<()> {
         abigen!(
             UniV2Pair,
@@ -100,12 +111,15 @@ impl Pair {
         //        event Mint(address sender, address indexed owner, int24 indexed tickLower, int24 indexed tickUpper, uint128 amount, uint256 amount0, uint256 amount1)
         //    ]"#,
         //);
-        
-        
+
         let contract = UniV2Pair::new(self.address, ws.clone());
 
         let events = contract.event::<MintFilter>();
-        let block_events = contract.event::<MintFilter>().from_block(block_number).query().await?;
+        let block_events = contract
+            .event::<MintFilter>()
+            .from_block(block_number)
+            .query()
+            .await?;
 
         let mut amount0: U256 = 0.into();
         let mut amount1: U256 = 0.into();
@@ -113,19 +127,17 @@ impl Pair {
         if !block_events.is_empty() {
             amount0 = block_events[0].amount_0;
             amount1 = block_events[0].amount_1;
-
         } else {
             let mut stream = events.stream().await?.take(1);
             timestamp_print!(
                 Color::BrightCyan,
                 Some(false),
                 format!(
-                    "[PAIR] Listening for Mint events on pair {}, from router {}", 
-                    self.address, 
-                    self.dex.router_address
+                    "[PAIR] Listening for Mint events on pair {}, from router {}",
+                    self.address, self.dex.router_address
                 )
             );
-            
+
             while let Some(Ok(f)) = stream.next().await {
                 amount0 = f.amount_0;
                 amount1 = f.amount_1;
@@ -134,36 +146,46 @@ impl Pair {
         let amount_0 = token_amount(amount0.as_u128(), self.token0.decimals);
         let amount_1 = token_amount(amount1.as_u128(), self.token1.decimals);
         timestamp_print!(
-            Color::Green, 
-            Some(true), 
-            format!("[PAIR][{}][FOUND] AddLiquidity detected on pair: {:#066x}", self.dex.name, self.address)
+            Color::Green,
+            Some(true),
+            format!(
+                "[PAIR][{}][FOUND] AddLiquidity detected on pair: {:#066x}",
+                self.dex.name, self.address
+            )
         );
         timestamp_print!(
             Color::Green,
-            Some(false), 
+            Some(false),
             format!("[PAIR][LIQ] TokenIn: {:?} {}", amount_0, self.token0.symbol)
         );
         timestamp_print!(
             Color::Green,
-            Some(false), 
-            format!("[PAIR][LIQ] TokenOut: {:?} {}", amount_1, self.token1.symbol)
+            Some(false),
+            format!(
+                "[PAIR][LIQ] TokenOut: {:?} {}",
+                amount_1, self.token1.symbol
+            )
         );
         let self_mut = Arc::get_mut(self).unwrap();
         self_mut.get_reserves(http.clone()).await.unwrap();
 
-        self_mut.new_token.verified_contract(self_mut.dex.chain.clone()).await.unwrap();
+        self_mut
+            .new_token
+            .verified_contract(self_mut.dex.chain.clone())
+            .await
+            .unwrap();
 
         let pair = self.clone();
         timestamp_print!(
             Color::Blue,
-            Some(false), 
-            format!("[PAIR] Chart: https://dexscreener.com/{}/{:#066x}", self.dex.chain.to_lowercase(),self.address)
+            Some(false),
+            format!(
+                "[PAIR] Chart: https://dexscreener.com/{}/{:#066x}",
+                self.dex.chain.to_lowercase(),
+                self.address
+            )
         );
         alert(pair, amount_0, amount_1).await.unwrap();
         Ok(())
-
     }
-
-    
 }
-

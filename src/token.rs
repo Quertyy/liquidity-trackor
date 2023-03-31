@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use ethers::prelude::{k256::ecdsa::SigningKey, *};
+use ethers::prelude::*;
 use eyre::Result;
 
 use reqwest::Error;
@@ -18,7 +18,7 @@ pub struct Token {
 }
 
 impl Token {
-    pub async fn new(address: Address, provider: Arc<SignerMiddleware<Provider<Http>, Wallet<SigningKey>>>) -> Result<Self> {
+    pub async fn new(address: Address, provider: Arc<Provider<Http>>) -> Result<Self> {
         abigen!(ERC20, "src/abi/ERC20.json");
         let provider = provider.clone();
         let name = ERC20::new(address, provider.clone())
@@ -54,9 +54,7 @@ impl Token {
         let api_key = std::env::var("ETHERSCAN_API_KEY").expect("missing API KEY");
         let url = format!(
             "https://api.{}api?module=contract&action=getabi&address={:#066x}&apikey={}",
-            explorer, 
-            self.address, 
-            api_key
+            explorer, self.address, api_key
         );
 
         let verified: bool;
@@ -70,10 +68,21 @@ impl Token {
             verified = true;
         }
 
-        timestamp_print!(status, Some(false), format!("[TOKEN] {} | Contrat verified: {}", self.name, verified));
+        timestamp_print!(
+            status,
+            Some(false),
+            format!("[TOKEN] {} | Contrat verified: {}", self.name, verified)
+        );
         if verified {
             self.is_verified = true;
-            timestamp_print!(Color::Blue, Some(false), format!("[TOKEN] Contract code: https://{}address/{:#066x}#code", explorer, self.address));
+            timestamp_print!(
+                Color::Blue,
+                Some(false),
+                format!(
+                    "[TOKEN] Contract code: https://{}address/{:#066x}#code",
+                    explorer, self.address
+                )
+            );
         }
         Ok(verified)
     }
@@ -88,10 +97,8 @@ impl Token {
             "bsc" => "bscscan.com/".to_string(),
             "arbitrum" => "arbiscan.io/".to_string(),
             "polygon" => "polygonscan.com/".to_string(),
-            "avalanche" =>  "snowtrace.io/".to_string(),
+            "avalanche" => "snowtrace.io/".to_string(),
             _ => "etherscan.io/".to_string(),
         }
     }
-
-    
 }
