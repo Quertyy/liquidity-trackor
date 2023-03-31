@@ -1,0 +1,36 @@
+{
+    "ETHEREUM": {
+        "SushiswapV2": {
+            "router": "0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f",
+            "factory": "0xc0aee478e3658e2610c5f7a4a2e1777ce9e4f2ac"
+        },
+        "UniswapV2": {
+            "router": "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
+            "factory": "0x5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f"
+        },
+        "PancakeSwap": {
+            "router": "0xeff92a263d31888d860bd50809a8d171709b7b1c",
+            "factory": "0x1097053fd2ea711dad45caccc45eff7548fcb362"
+        },
+        "Trader Joe": {
+            "router": "0x7BFd7192E76D950832c77BB412aaE841049D8D9B",
+            "factory": "0x1886D09C9Ade0c5DB822D85D21678Db67B6c2982"
+        }
+    },
+    "BSC": {
+        "PancakeSwap": {
+            "router": "0x10ed43c718714eb63d5aa57b78b54704e256024e",
+            "factory": "0xca143ce32fe78f1f7019d7d551a6402fc5350c73"
+        }
+    },
+    "ARBITRUM": {
+        "Sushiswap": {
+            "router": "0x1b02da8cb0d097eb8d57a175b88c7d8b47997506",
+            "factory": "0xc35dadb65012ec5796536bd9864ed8773abc74c4"
+        },
+        "UniswapV3": {
+            "router": "0xe592427a0aece92de3edee1f18e0157c05861564",
+            "factory": "0x1f98431c8ad98523631ae4a59f267346ea31f984"
+        }
+    }
+}
