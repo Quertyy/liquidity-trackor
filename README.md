@@ -8,6 +8,19 @@
 
 Copy the `.env.example` file and rename it to `.env`. Fill the variables with your own values.
 
+```
+ETHERSCAN_API_KEY= //if you want to check if the token's contract is verified
+NETWORK_RPC_CHAIN= //the rpc url of the chain you want to track.
+NETWORK_WSS_CHAIN= //the wss url of the chain you want to track.
+DISCORD_WEBHOOK_CHAIN= //the url of your discord webhook.
+
+// i.e.: if you want to run the bot on arbitrum, you need to fill the variables with the arbitrum values.
+NETWORK_RPC_ARBITRUM=....
+NETWORK_WSS_ARBITRUM=....
+DISCORD_WEBHOOK_ARBITRUM=....
+ROLE_ID_ARBITRUM=....
+```
+
 ##### Supported chains
 - Ethereum
 - Arbitrum
@@ -30,9 +43,6 @@ A json file is already present containing the contract addresses of several dex 
 ```bash
 cargo run -- --chain arbitrum
 ```
-
-![Result output](img/output.png)
-![Discord alert](img/output2.png)
 
 #### TODO
 - [ ] UniV3 support

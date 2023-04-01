@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use ethers::prelude::{abi::AbiDecode, *};
+use ethers::prelude::*;
 
 use crate::{
     address_book::{
-        UniV2Factory, UniV2Router, UniV2RouterCalls, PANCAKESWAP_FACTORY, SUSHISWAPV2_FACTORY,
+        UniV2Factory, UniV2Router, PANCAKESWAP_FACTORY, SUSHISWAPV2_FACTORY,
         SUSHIV2_FACTORY_ARBITRUM, TRADERJOE_FACTORY_ARBITRUM, UNISWAPV2_FACTORY, UNISWAPV3_FACTORY,
         VVS_FACTORY,
     },
@@ -63,27 +63,6 @@ impl Dex {
         }
     }
 
-    /// A quick way to decode tx hex data.
-    pub async fn decode_router_tx_data(&self, tx_data: String) {
-        let calldata: Bytes = tx_data.parse().unwrap();
-        let decoded = UniV2RouterCalls::decode(&calldata).unwrap();
-        println!("Decoded dex tx: {:?}", decoded);
-    }
-
-    /// Attempts to retrieve the total pairs created from the dex's factory.
-    /*
-    pub async fn get_pairs(&self) {
-        println!("Calling allPairsLength from {}", self.factory_address);
-        match self.factory.all_pairs_length().call().await {
-            Ok(result) => {
-                println!("   ~ [PASS] Total pairs: {:?}", result)
-            }
-            Err(e) => {
-                println!("   ~ [FAIL] Total pairs: {:?}", e)
-            }
-        }
-    }
-    */
     pub fn get_dex_name(contract_address: Address) -> String {
         let address_str = format!("{:#066x}", contract_address);
 
